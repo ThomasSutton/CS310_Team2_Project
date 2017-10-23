@@ -9,5 +9,9 @@ public class CS310_Team2_Project {
         System.out.println(s.toString());
         Punch p = db.getPunch(3433);
         System.out.println(p.printOriginalTimestamp());
+        
+        Punch p2 = new Punch("4E6E296E", 105, 1);
+        System.out.println(p2.printOriginalTimestamp());
+        System.out.println(Integer.toString(db.insertPunch(p2)));
     }
 }
