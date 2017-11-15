@@ -1,6 +1,8 @@
 package cs310_team2_project;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.text.SimpleDateFormat;
 
 public class TASDatabase {
@@ -169,6 +171,89 @@ public class TASDatabase {
             se.printStackTrace();
         }
         return null;
+    }
+    
+    public int getMinutesAccrued(Punch p){
+        int minutes = 0;
+        String badge = p.getBadgeid().toUpperCase();
+        String date = (new SimpleDateFormat("yyyy-MM-dd")).format(p.getOriginaltimestamp());
+        try{
+            Statement statement = conn.createStatement();
+            ResultSet result = statement.executeQuery("SELECT * FROM event WHERE badgeid='" + badge + "' AND originaltimestamp LIKE '" + date + "%'");
+            if(result != null){
+                ArrayList<Punch> punches = new ArrayList();
+                
+                int shiftID = getShiftID(badge);
+                Shift s = getShift(shiftID);
+                
+                while(result.next()){
+                    int id = result.getInt("id");
+                    int terminalID = result.getInt("terminalid");
+                    String badgeID = result.getString("badgeid");
+                    Timestamp originalTimestamp = result.getTimestamp("originaltimestamp");
+                    int eventTypeID = result.getInt("eventtypeid");
+
+                    String eventData = result.getString("eventdata");
+                    Timestamp adjustedTimestamp = result.getTimestamp("adjustedtimestamp");
+
+                    Punch newPunch = new Punch(id, terminalID, eventTypeID, shiftID, badgeID, eventData,
+                                        originalTimestamp, adjustedTimestamp);
+
+                    punches.add(newPunch);
+                }
+                int numPunches = punches.size();
+                ArrayList<Long> times = new ArrayList();
+                for(int i=0; i<numPunches; i++){
+                    punches.get(i).adjust(s);
+                    times.add(punches.get(i).getAdjustedtimestamp().getTime());
+                }
+                long timeInterval = 0;
+                if(numPunches == 2){
+                    if(!punches.get(1).getEventdata().equals("TIMED OUT")){
+                        timeInterval = (times.get(1) - times.get(0))/60000;
+                        if(timeInterval >= s.getLunchDeduct()-30){
+                            timeInterval -= 30;
+                        }
+                    }
+                    else{
+                        timeInterval = 0;
+                    }
+                }
+                else{
+                    timeInterval += (times.get(1) - times.get(0));
+                    if(!punches.get(3).getEventdata().equals("TIMED OUT")){
+                        timeInterval += (times.get(3) - times.get(2));
+                    }
+                    timeInterval /= 60000;
+                }
+                minutes = (int) timeInterval;
+                result.close();
+                return minutes; 
+            }
+            statement.close();
+        }
+        catch(SQLException se){
+            se.printStackTrace();
+        }
+        return -1;
+    }
+    
+    private  int getShiftID(String badge){
+        try{
+            int shiftID = -1;
+            Statement statement = conn.createStatement();
+            ResultSet b = statement.executeQuery("SELECT shiftid from employee WHERE badgeid='" + badge + "'");
+            if(b != null){
+                b.next();
+                shiftID = b.getInt("shiftid");
+                b.close();
+            }
+            return shiftID;
+        }
+        catch(SQLException se){
+            se.printStackTrace();
+        }
+        return -1;
     }
     
     public void close(){
