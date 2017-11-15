@@ -92,42 +92,21 @@ public class TASDatabase {
     }
     
     public int insertPunch(Punch p){
-        //The first thing we need to do is create the query using the data provided for the new punch.
-        //This is pretty much exactly like the toString() methods in Badge, Punch, and Shift.
         String query = "INSERT INTO `event` (`id`,`terminalid`,`badgeid`,`originaltimestamp`,`eventtypeid`,`eventdata`,`adjustedtimestamp`) VALUES (";
-        
-        //Now we concatonate the query string with our table data.
-        //Although ID is auto-incremented by MySQL, it is also flagged as "NOT NULL",
-        //so we must give it some kind of value in the query (in our case, 0).
         query += Integer.toString(p.getId());
-        
         query += "," + Integer.toString(p.getTerminalid());
         query += ",'" + p.getBadgeid() + "',";
-        
-        //Before we pass in the original timestamp, we need to put it in the proer format.
         query += "'" + (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(p.getOriginaltimestamp()) + "',";
-        
         query += Integer.toString(p.getPunchtypeid());
-        
-        //Finally, eventdata and adjustedtimestamp go in as NULLs.
         query += ",NULL,NULL);";
-        //If the calling class gets a -1 from this method, then we know something went wrong.
+        
         int newID = -1;
         try{
             Statement statement = conn.createStatement();
-            
-            //To add or remove entries from the table, we must use Statement.executeUpdate instead of Statement.executeQuery.
-            //This call will place any auto-generated table data into statement for later use.
             statement.executeUpdate(query, Statement.RETURN_GENERATED_KEYS);
-            
-            //Collect the auto-generated table data into a ResultSet.
             ResultSet result = statement.getGeneratedKeys();
-            
-            //Extract the ID from the above ResultSet.
             if(result != null){
                 result.next();
-                
-                //It isn't listed as "id," so we have to get it by index value.
                 newID = result.getInt(1);
             }
             result.close();
