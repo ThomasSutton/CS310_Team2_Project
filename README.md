@@ -11,6 +11,7 @@ This repository is a group project that was done in my CS 310 Software Engineeri
 - The classes include: “Badge.java”, “Punch.java”, “Shift.java”, “CS310_Team2_Project.java”, and “TASDatabase.java”.
 - Feature five, the feature that I will describe in detail, dealed with taking information from previous features, putting it into a hash map, adding the hash map to an array list, and returning that array list as a JSON string.
 - This feature involved creating the method called “getPunchListAsJSON()” and this method is under the “TASDatabase.java” class.
+- This method is not under the master branch. To view it you need to change to the branch called "Final".
 
 /Algorithm/
 
